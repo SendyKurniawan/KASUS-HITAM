@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Deception: Murder in Hong Kong — Web Edition</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0c11; --panel:#151a24; --panel2:#1d2431; --line:#2b3444;
+  --text:#e8ecf4; --muted:#8b95a8; --accent:#e0483a; --blue:#4a9eff;
+  --gold:#e8b64c; --green:#3fbf7f; --purple:#a06be8;
+}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:radial-gradient(1200px 700px at 50% -15%,#1b2130,#07090d 65%);
+  color:var(--text);min-height:100vh;font-size:15px;line-height:1.45;
+}
+h1,h2,h3{margin:0 0 .4em;line-height:1.15}
+h1{font-size:1.6rem;letter-spacing:.5px}
+h2{font-size:1.25rem}
+h3{font-size:1rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
+.muted{color:var(--muted)}
+.small{font-size:.82rem}
+.center{text-align:center}
+.wrap{max-width:1150px;margin:0 auto;padding:16px 14px 90px}
+.card{background:linear-gradient(180deg,var(--panel),#11151d);border:1px solid var(--line);
+  border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 6px 22px rgba(0,0,0,.35)}
+.btn{
+  font:inherit;font-weight:600;cursor:pointer;border-radius:10px;padding:11px 18px;
+  border:1px solid var(--line);background:var(--panel2);color:var(--text);
+  transition:.15s;display:inline-flex;align-items:center;gap:7px;justify-content:center;
+}
+.btn:hover{background:#28313f;border-color:#3d4a5e}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:linear-gradient(180deg,#e0483a,#b83226);border-color:#f2604f;color:#fff}
+.btn.primary:hover{background:linear-gradient(180deg,#ef5346,#c93a2d)}
+.btn.blue{background:linear-gradient(180deg,#3d8ee6,#2a6dbb);border-color:#5aa4f0;color:#fff}
+.btn.gold{background:linear-gradient(180deg,#e8b64c,#c2933a);border-color:#f4c96a;color:#231a05}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn.sm{padding:7px 12px;font-size:.83rem;border-radius:8px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.between{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+
+/* ---------- Setup ---------- */
+.nameinput{
+  width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--line);
+  background:#0e1219;color:var(--text);font:inherit;margin-bottom:8px;
+}
+.nameinput:focus{outline:none;border-color:var(--blue)}
+.stepper{display:flex;align-items:center;gap:14px}
+.stepper .num{font-size:2rem;font-weight:700;min-width:52px;text-align:center;color:var(--gold)}
+.toggle{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);
+  border-radius:10px;background:#0e1219;cursor:pointer;margin-bottom:8px}
+.toggle.on{border-color:var(--green);background:#0f1d18}
+.toggle .box{width:20px;height:20px;border-radius:5px;border:2px solid var(--line);flex:none;
+  display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700}
+.toggle.on .box{background:var(--green);border-color:var(--green);color:#04150d}
+
+/* ---------- Pass / Reveal ---------- */
+.pass{min-height:88vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:24px;gap:12px}
+.pass .icon{font-size:4rem;filter:drop-shadow(0 0 24px rgba(224,72,58,.5))}
+.reveal-card{max-width:520px;width:100%;border-radius:18px;padding:26px 20px;text-align:center;
+  border:2px solid var(--line);background:linear-gradient(180deg,#1a2130,#0e1219)}
+.reveal-card.murderer{border-color:var(--accent);box-shadow:0 0 60px rgba(224,72,58,.28)}
+.reveal-card.fs{border-color:var(--blue);box-shadow:0 0 60px rgba(74,158,255,.28)}
+.reveal-card.witness{border-color:var(--purple);box-shadow:0 0 60px rgba(160,107,232,.28)}
+.reveal-card.accomplice{border-color:var(--gold);box-shadow:0 0 60px rgba(232,182,76,.28)}
+.role-name{font-size:1.8rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin:8px 0}
+.role-desc{color:var(--muted);font-size:.92rem;max-width:420px;margin:0 auto 14px}
+
+/* ---------- Board ---------- */
+.header{position:sticky;top:0;z-index:40;background:rgba(10,12,17,.93);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);padding:10px 14px;margin:-16px -14px 16px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;
+  background:var(--panel2);border:1px solid var(--line);font-size:.8rem;font-weight:600}
+.pill.red{border-color:var(--accent);color:#ff8b7f}
+.pill.blue{border-color:var(--blue);color:#8cc4ff}
+.pill.gold{border-color:var(--gold);color:var(--gold)}
+.pill.green{border-color:var(--green);color:var(--green)}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px;margin-bottom:18px}
+.tile{background:linear-gradient(180deg,#1a2130,#12161e);border:1px solid var(--line);
+  border-radius:12px;padding:11px;transition:.15s}
+.tile.replaceable{cursor:pointer;border-color:var(--gold);animation:pulse 1.4s infinite}
+.tile.replaceable:hover{background:#2a2413}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(232,182,76,.5)}50%{box-shadow:0 0 0 8px rgba(232,182,76,0)}}
+.tile-name{font-size:.72rem;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);
+  font-weight:700;margin-bottom:8px}
+.opts{display:flex;flex-wrap:wrap;gap:5px}
+.opt{position:relative;font-size:.78rem;padding:6px 10px;border-radius:7px;border:1px solid #2b3444;
+  background:#0e1219;color:#b9c3d4;cursor:default;transition:.12s}
+.opts.clickable .opt{cursor:pointer}
+.opts.clickable .opt:hover{border-color:var(--blue);color:#fff}
+.opt.marked{background:linear-gradient(180deg,#e0483a,#a82a20);border-color:#ff6a58;color:#fff;
+  font-weight:700;box-shadow:0 0 14px rgba(224,72,58,.5)}
+.opt.marked::after{content:"●";position:absolute;top:-7px;right:-5px;font-size:.6rem;color:#ffd7d2}
+
+.players{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.pcard{background:linear-gradient(180deg,#161c27,#10141c);border:1px solid var(--line);
+  border-radius:12px;padding:11px}
+.pcard.accused{border-color:var(--accent);box-shadow:0 0 24px rgba(224,72,58,.3)}
+.pname{font-weight:700;font-size:.95rem;margin-bottom:8px;display:flex;justify-content:space-between;
+  align-items:center;gap:8px}
+.hand-label{font-size:.62rem;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);
+  font-weight:700;margin:7px 0 4px}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-size:.72rem;padding:4px 8px;border-radius:6px;border:1px solid;line-height:1.25}
+.chip.clue{background:rgba(224,72,58,.11);border-color:rgba(224,72,58,.45);color:#ffb3aa}
+.chip.means{background:rgba(74,158,255,.11);border-color:rgba(74,158,255,.45);color:#a8d2ff}
+.chip.sel{background:#fff;color:#111;border-color:#fff;font-weight:700}
+
+/* ---------- Modal ---------- */
+.overlay{position:fixed;inset:0;background:rgba(4,6,10,.86);backdrop-filter:blur(6px);z-index:100;
+  display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto}
+.modal{background:linear-gradient(180deg,#1b2230,#10141c);border:1px solid var(--line);
+  border-radius:16px;padding:18px;max-width:620px;width:100%;max-height:88vh;overflow-y:auto;
+  box-shadow:0 24px 70px rgba(0,0,0,.7)}
+.solution{background:linear-gradient(180deg,#2a1414,#170b0b);border:1px solid var(--accent);
+  border-radius:12px;padding:12px;margin-bottom:14px}
+.solution .lbl{font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:#ff8b7f;font-weight:700}
+.solution .val{font-size:1.05rem;font-weight:700;margin-bottom:6px}
+.banner{border-radius:11px;padding:11px 14px;margin-bottom:14px;font-size:.88rem;font-weight:600;
+  border:1px solid var(--gold);background:rgba(232,182,76,.1);color:var(--gold)}
+.banner.red{border-color:var(--accent);background:rgba(224,72,58,.12);color:#ff9b90}
+.banner.blue{border-color:var(--blue);background:rgba(74,158,255,.1);color:#9ecbff}
+.result-icon{font-size:4.5rem;text-align:center;margin-bottom:6px}
+.footer{position:fixed;bottom:0;left:0;right:0;z-index:50;background:rgba(10,12,17,.95);
+  backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 14px;
+  display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+const CLUES = [
+"Bloodstained Glove","Broken Watch","Chess Piece","Cigarette Butt","Porcelain Doll",
+"Leather Diary","Gold Earring","Fountain Pen","Glass Shard","Hair Dryer",
+"Ice Pick","Lipstick","Lighter","Marble","Mirror Fragment",
+"Necklace","Old Photograph","Playing Card","Pocket Knife","Red Scarf",
+"Rope Fragment","Silver Spoon","Syringe","Teddy Bear","Theatre Ticket",
+"Torn Letter","Umbrella","Wedding Ring","Whiskey Bottle","Adjustable Wrench",
+"Balloon","Bird Feather","Bookmark","Brass Key","Candlestick",
+"Chewing Gum","Coffee Mug","Comb","Crystal Goblet","Dog Collar",
+"Dumbbell","Envelope","Fishing Hook","Flashlight","Garden Shears",
+"Guitar String","Handcuffs","Harmonica","Headphones","High Heel Shoe",
+"Ink Bottle","Jar of Jam","Kite String","Magnifying Glass","Meat Cleaver",
+"Mouse Trap","Nail File","Oil Can","Paint Brush","Perfume Bottle",
+"Pill Bottle","Pocket Mirror","Postage Stamp","Rubber Band","Safety Pin",
+"Scissors","Sewing Needle","Shoe Lace","Snow Globe","Stethoscope",
+"Stopwatch","Suitcase","Sunglasses","Thimble","Toothbrush",
+"Trophy","Violin Bow","Wallet","Whistle","Wine Cork"
+];
+
+const MEANS = [
+"Poison","Pistol","Rope","Kitchen Knife","Pillow","Baseball Bat",
+"Hammer","Axe","Sword","Candlestick","Heavy Wrench","Dumbbell",
+"Chainsaw","Power Drill","Scalpel","Syringe","Crowbar","Dagger",
+"Sledgehammer","Screwdriver","Wire","Plastic Bag","Bare Hands","Push from a Height",
+"Drowning","Arson","Explosion","Motor Vehicle","Train","Electrocution",
+"Freezing","Venomous Snake","Boiling Water","Acid","Sleeping Pills","Gas Leak",
+"Anesthetic","Bow and Arrow","Crossbow","Spear","Machete","Cleaver",
+"Golf Club","Hockey Stick","Pool Cue","Frying Pan","Shovel","Pitchfork",
+"Nail Gun","Lawnmower"
+];
+
+const TILES = [
+  { id:'location', name:'Location of Crime', fixed:true,
+    options:['Restaurant','Hotel','Office','Park','School','Hospital','Casino','Ship'] },
+  { id:'cause', name:'Cause of Death', fixed:true,
+    options:['Stabbing','Gunshot','Strangulation','Blunt Force','Poisoning','Drowning','Burning','Fall from Height'] },
+  { id:'corpse', name:'Condition of the Corpse',
+    options:['Still Warm','Cold','Rigor Mortis','Dismembered','Burned','Frozen'] },
+  { id:'time', name:'Time of Death',
+    options:['Dawn','Morning','Noon','Afternoon','Evening','Midnight'] },
+  { id:'weather', name:'Weather',
+    options:['Clear','Rainy','Snowy','Foggy','Windy','Stormy'] },
+  { id:'occupation', name:"Victim's Occupation",
+    options:['Teacher','Doctor','Chef','Police Officer','Farmer','Student'] },
+  { id:'age', name:"Victim's Age",
+    options:['Under 10','Teens','20s','30s','40s','50s or Older'] },
+  { id:'build', name:"Victim's Build",
+    options:['Frail','Slim','Average','Athletic','Heavy','Muscular'] },
+  { id:'expression', name:"Victim's Expression",
+    options:['Calm','Terrified','Angry','Surprised','Smiling','In Pain'] },
+  { id:'relation', name:'Relationship to Suspect',
+    options:['Stranger','Acquaintance','Friend','Family','Colleague','Lover'] },
+  { id:'blood', name:'Blood Splatter',
+    options:['None','A Few Drops','Smear','Spray Pattern','Pool of Blood','Trails'] },
+  { id:'evidence', name:'Evidence Left Behind',
+    options:['Fingerprints','Footprints','Bloody Handprint','Torn Fabric','Hair Strands','None'] },
+  { id:'sounds', name:'Sounds Heard',
+    options:['Scream','Gunshot','Glass Breaking','Argument','Music','Silence'] },
+  { id:'clothing', name:"Victim's Clothing",
+    options:['Formal Suit','Casual Wear','Uniform','Nightwear','Sportswear','Costume'] },
+  { id:'position', name:"Corpse's Position",
+    options:['Face Up','Face Down','Seated','Hanging','Crouched','Hidden'] },
+  { id:'scene', name:'Scene of the Crime',
+    options:['Pristine','Slightly Messy','Ransacked','Signs of Struggle','Blood Everywhere','Staged'] },
+  { id:'witnesses', name:'Witnesses',
+    options:['None','One Person','Several People','A Child','An Animal','Security Camera'] },
+  { id:'behavior', name:"Suspect's Behavior",
+    options:['Calm','Nervous','Aggressive','Crying','Overly Helpful','Avoiding Eye Contact'] },
+  { id:'weaponfound', name:'Murder Weapon Found?',
+    options:['Not Found','Hidden Nearby',"In Victim's Hand",'In the Trash','Washed Clean','On the Suspect'] },
+  { id:'habits', name:"Victim's Habits",
+    options:['Smoker','Drinker','Gambler','Fitness Freak','Bookworm','Workaholic'] }
+];
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const app = document.getElementById('app');
+
+function shuffle(a){
+  a = a.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function byId(id){ return S.players.find(p=>p.id===id); }
+function byIdOrder(arr,id){ return arr.find(p=>p.id===id); }
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let setup = { count:6, names:[], accomplice:false, witness:false };
+let S = null;
+
+/* ============================================================
+   RENDER ROUTER
+   ============================================================ */
+function render(){
+  if(!S) return renderSetup();
+  switch(S.phase){
+    case 'reveal':       return renderReveal();
+    case 'accomplice':   return renderAccomplicePass();
+    case 'witness':      return renderWitnessPass();
+    case 'investigate':  return renderBoard();
+    case 'witnessGuess': return renderWitnessGuess();
+    case 'result':       return renderResult();
+  }
+}
+
+/* ============================================================
+   SETUP SCREEN
+   ============================================================ */
+function renderSetup(){
+  const n = setup.count;
+  while(setup.names.length < n) setup.names.push('');
+  setup.names.length = n;
+
+  const nameFields = setup.names.map((v,i)=>`
+    <input class="nameinput" data-act="name" data-i="${i}" maxlength="14"
+           placeholder="Player ${i+1}" value="${esc(v)}">`).join('');
+
+  app.innerHTML = `
+  <div class="wrap">
+    <div class="card center">
+      <h1>🕵️ DECEPTION</h1>
+      <div class="muted" style="letter-spacing:3px;font-size:.78rem;text-transform:uppercase">
+        Murder in Hong Kong · CS-Files
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Number of Players</h3>
+      <div class="stepper">
+        <button class="btn" data-act="dec">−</button>
+        <div class="num">${n}</div>
+        <button class="btn" data-act="inc">+</button>
+        <div class="muted small" style="margin-left:auto">4 – 12 players</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Player Names</h3>
+      ${nameFields}
+    </div>
+
+    <div class="card">
+      <h3>Optional Roles (6+ players)</h3>
+      <div class="toggle ${setup.accomplice?'on':''}" data-act="tog-accomplice">
+        <div class="box">${setup.accomplice?'✓':''}</div>
+        <div>
+          <div style="font-weight:700">Accomplice</div>
+          <div class="muted small">Knows the murderer and the solution. Wins with the murderer.</div>
+        </div>
+      </div>
+      <div class="toggle ${setup.witness?'on':''}" data-act="tog-witness">
+        <div class="box">${setup.witness?'✓':''}</div>
+        <div>
+          <div style="font-weight:700">Witness</div>
+          <div class="muted small">An investigator who knows the murderer's identity — but can be silenced.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>How to Play</h3>
+      <div class="small muted" style="line-height:1.7">
+        <b style="color:#e8ecf4">1.</b> Every player except the Forensic Scientist is dealt 4 red <b>Clue</b> cards and 4 blue <b>Means</b> cards, face up.<br>
+        <b style="color:#e8ecf4">2.</b> The <b style="color:#4a9eff">Forensic Scientist</b> holds no cards — they know the solution and can only communicate through Scene tiles.<br>
+        <b style="color:#e8ecf4">3.</b> The <b style="color:#e0483a">Murderer</b> secretly picks one Clue and one Means card from their own hand.<br>
+        <b style="color:#e8ecf4">4.</b> The Forensic Scientist places one bullet on each Scene tile. Discuss!<br>
+        <b style="color:#e8ecf4">5.</b> Any player may spend their badge to accuse a suspect + Clue + Means.<br>
+        <b style="color:#e8ecf4">6.</b> Three rounds. If nobody solves it, the Murderer escapes.
+      </div>
+    </div>
+
+    <button class="btn primary" style="width:100%;padding:16px;font-size:1.05rem" data-act="start">
+      🔪 Begin the Investigation
+    </button>
+  </div>`;
+}
+
+/* ============================================================
+   GAME CREATION
+   ============================================================ */
+function createGame(){
+  const names = setup.names.map((v,i)=> v.trim() || `Player ${i+1}`);
+  const n = names.length;
+
+  const players = names.map((name,i)=>({
+    id:i, name, role:'investigator',
+    hand:{ clue:[], means:[] },
+    badge:true
+  }));
+
+  const order = shuffle(players.map(p=>p.id));
+  let k = 0;
+  const fsId       = order[k++];
+  const murdererId = order[k++];
+  let accompliceId = null, witnessId = null;
+  if(setup.accomplice && n >= 6) accompliceId = order[k++];
+  if(setup.witness    && n >= 6) witnessId    = order[k++];
+
+  byIdOrder(players, fsId).role = 'fs';
+  byIdOrder(players, murdererId).role = 'murderer';
+  if(accompliceId !== null) byIdOrder(players, accompliceId).role = 'accomplice';
+  if(witnessId    !== null) byIdOrder(players, witnessId).role    = 'witness';
+
+  /* ---- Deal cards: the Forensic Scientist receives NONE ---- */
+  const clueDeck  = shuffle(CLUES);
+  const meansDeck = shuffle(MEANS);
+  let ci = 0, mi = 0;
+  players.forEach(p=>{
+    if(p.id === fsId){ p.hand.clue = []; p.hand.means = []; return; }
+    p.hand.clue  = clueDeck.slice(ci*4,  ci*4+4);  ci++;
+    p.hand.means = meansDeck.slice(mi*4, mi*4+4);  mi++;
+  });
+
+  const fixed  = TILES.filter(t=>t.fixed).map(t=>({...t, bullet:null}));
+  const randoms= shuffle(TILES.filter(t=>!t.fixed)).slice(0,4).map(t=>({...t, bullet:null}));
+
+  S = {
+    phase:'reveal',
+    players,
+    fsId, murdererId, accompliceId, witnessId,
+    solution:null,
+    /* If both Accomplice and Witness exist, the Witness only learns the PAIR,
+       in random order — never which one is the murderer. */
+    witnessPair: (accompliceId !== null && witnessId !== null)
+      ? shuffle([murdererId, accompliceId])
+      : null,
+    tiles:[...fixed, ...randoms],
+    round:1,
+    revealIndex:0,
+    revealShown:false,
+    pickClue:null,
+    pickMeans:null,
+    fsMode:false,
+    replacing:null,
+    accuse:null,
+    witnessGuessResult:null,
+    result:null,
+    usedTileIds: new Set([...fixed, ...randoms].map(t=>t.id))
+  };
+  render();
+}
+
+/* ============================================================
+   ROLE REVEAL
+   ============================================================ */
+function renderReveal(){
+  const p = S.players[S.revealIndex];
+  if(!p){ S.phase = S.accompliceId!==null ? 'accomplice' : (S.witnessId!==null ? 'witness' : 'investigate'); return render(); }
+
+  if(!S.revealShown){
+    app.innerHTML = `
+      <div class="pass">
+        <div class="icon">🤫</div>
+        <h2 class="muted" style="letter-spacing:3px;text-transform:uppercase;font-size:.8rem">Pass the device to</h2>
+        <h1 style="font-size:2.4rem">${esc(p.name)}</h1>
+        <p class="muted small">Make sure nobody else can see the screen.</p>
+        <button class="btn primary" style="margin-top:14px;padding:15px 30px" data-act="reveal-role">
+          I am ${esc(p.name)} — Reveal my role
+        </button>
+        <div class="muted small" style="margin-top:20px">${S.revealIndex+1} / ${S.players.length}</div>
+      </div>`;
+    return;
+  }
+
+  if(p.role === 'murderer'){
+    const c = p.hand.clue, m = p.hand.means;
+    const ready = S.pickClue !== null && S.pickMeans !== null;
+    app.innerHTML = `
+      <div class="wrap" style="max-width:640px">
+        <div class="reveal-card murderer">
+          <div class="icon">🔪</div>
+          <div class="role-name" style="color:var(--accent)">Murderer</div>
+          <p class="role-desc">
+            You killed them. Choose <b>one Clue</b> and <b>one Means</b> from your own cards —
+            this becomes the solution the investigators must guess. Blend in. Misdirect. Survive.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Your Clue Cards — pick one</h3>
+          <div class="chips">
+            ${c.map((x,i)=>`<span class="chip clue ${S.pickClue===x?'sel':''}" data-act="pick-clue" data-i="${i}">${esc(x)}</span>`).join('')}
+          </div>
+          <h3 style="margin-top:16px">Your Means Cards — pick one</h3>
+          <div class="chips">
+            ${m.map((x,i)=>`<span class="chip means ${S.pickMeans===x?'sel':''}" data-act="pick-means" data-i="${i}">${esc(x)}</span>`).join('')}
+          </div>
+        </div>
+        <button class="btn primary" style="width:100%;padding:15px" data-act="confirm-solution" ${ready?'':'disabled'}>
+          ${ready ? '✓ Lock in the Solution' : 'Select one Clue and one Means'}
+        </button>
+      </div>`;
+    return;
+  }
+
+  const info = {
+    fs: { icon:'🔬', cls:'fs', name:'Forensic Scientist', color:'var(--blue)',
+          desc:'You know the truth. You hold no cards — you may not speak, gesture, or hint. You may only place bullets on Scene tiles. Guide them… or watch them fail.' },
+    investigator: { icon:'🔎', cls:'', name:'Investigator', color:'var(--text)',
+          desc:'Find the murderer. You may spend your badge once to accuse a suspect and name their Clue and Means.' },
+    accomplice: { icon:'🤝', cls:'accomplice', name:'Accomplice', color:'var(--gold)',
+          desc:'You are on the murderer\'s side. Their identity and the full solution will be shown to you after everyone has seen their role.' },
+    witness: { icon:'👁️', cls:'witness', name:'Witness', color:'var(--purple)',
+          desc:'You are an investigator — but you also caught a glimpse of the killer. If the crime is solved, the murderer gets one guess at you.' }
+  }[p.role];
+
+  app.innerHTML = `
+    <div class="pass">
+      <div class="reveal-card ${info.cls}">
+        <div class="icon">${info.icon}</div>
+        <div class="role-name" style="color:${info.color}">${info.name}</div>
+        <p class="role-desc">${info.desc}</p>
+        <button class="btn blue" style="width:100%" data-act="hide-role">Got it — hide &amp; pass on</button>
+      </div>
+    </div>`;
+}
+
+/* ============================================================
+   ACCOMPLICE / WITNESS INFO PASSES
+   ============================================================ */
+function renderAccomplicePass(){
+  const m = byId(S.murdererId);
+  if(!S.revealShown){
+    app.innerHTML = `
+      <div class="pass">
+        <div class="icon">🤝</div>
+        <h2 class="muted" style="letter-spacing:3px;text-transform:uppercase;font-size:.8rem">Pass the device to the</h2>
+        <h1 style="font-size:2.2rem">Accomplice</h1>
+        <p class="muted small">If you are not the Accomplice, hand the device along.</p>
+        <button class="btn gold" style="margin-top:14px;padding:15px 30px" data-act="show-accomplice">I am the Accomplice</button>
+      </div>`;
+    return;
+  }
+  app.innerHTML = `
+    <div class="pass">
+      <div class="reveal-card accomplice">
+        <div class="icon">🤝</div>
+        <div class="role-name" style="color:var(--gold)">Accomplice</div>
+        <p class="role-desc">The murderer is</p>
+        <h1 style="font-size:2rem;margin-bottom:16px">${esc(m.name)}</h1>
+        <p class="role-desc">The solution:</p>
+        <div class="chips" style="justify-content:center">
+          <span class="chip clue sel">${esc(S.solution.clue)}</span>
+          <span class="chip means sel">${esc(S.solution.means)}</span>
+        </div>
+        <button class="btn gold" style="width:100%;margin-top:22px" data-act="next-from-accomplice">Got it — hide &amp; pass on</button>
+      </div>
+    </div>`;
+}
+
+/* ============================================================
+   WITNESS PASS
+   With an Accomplice in play, the Witness sees ONLY two names
+   in random order — one is the Murderer, one is the Accomplice.
+   They cannot tell which is which.
+   ============================================================ */
+function renderWitnessPass(){
+  const m = byId(S.murdererId);
+  const a = S.accompliceId !== null ? byId(S.accompliceId) : null;
+
+  if(!S.revealShown){
+    app.innerHTML = `
+      <div class="pass">
+        <div class="icon">👁️</div>
+        <h2 class="muted" style="letter-spacing:3px;text-transform:uppercase;font-size:.8rem">Pass the device to the</h2>
+        <h1 style="font-size:2.2rem">Witness</h1>
+        <p class="muted small">If you are not the Witness, hand the device along.</p>
+        <button class="btn blue" style="margin-top:14px;padding:15px 30px" data-act="show-witness">I am the Witness</button>
+      </div>`;
+    return;
+  }
+
+  const pair = S.witnessPair;
+
+  app.innerHTML = `
+    <div class="pass">
+      <div class="reveal-card witness">
+        <div class="icon">👁️</div>
+        <div class="role-name" style="color:var(--purple)">Witness</div>
+
+        ${pair ? `
+          <p class="role-desc">
+            You glimpsed two figures at the scene — but in the chaos you never saw who did what.
+            <b>One of these two is the Murderer. The other is the Accomplice.</b>
+          </p>
+          <div class="row" style="justify-content:center;gap:14px;margin:14px 0">
+            ${pair.map(id=>`
+              <div style="border:1px solid var(--purple);border-radius:10px;padding:10px 18px;
+                          font-size:1.15rem;font-weight:700;background:rgba(160,107,232,.1)">
+                ${esc(byId(id).name)}
+              </div>`).join('')}
+          </div>
+          <p class="role-desc">You do <b>not</b> know which of them is which.</p>
+        ` : `
+          <p class="role-desc">You saw everything. The murderer is</p>
+          <h1 style="font-size:2rem;margin-bottom:16px">${esc(m.name)}</h1>
+        `}
+
+        <p class="role-desc">You do <b>not</b> know the solution — you still have to work it out with the others.
+        But be careful: if the crime is solved, the murderer gets one guess at who you are.</p>
+
+        <button class="btn blue" style="width:100%" data-act="next-from-witness">Got it — hide &amp; pass on</button>
+      </div>
+    </div>`;
+}
+
+/* ============================================================
+   MAIN BOARD
+   ============================================================ */
+function renderBoard(){
+  const m  = byId(S.murdererId);
+  const unplaced = S.tiles.filter(t=>t.bullet===null).length;
+  const roundDone = unplaced === 0 && !S.replacing;
+
+  const solPanel = S.fsMode ? `
+    <div class="solution">
+      <div class="lbl">🔒 Forensic Scientist — Confidential</div>
+      <div class="val">${esc(m.name)} is the Murderer</div>
+      <div class="row">
+        <span class="chip clue sel">${esc(S.solution.clue)}</span>
+        <span class="chip means sel">${esc(S.solution.means)}</span>
+      </div>
+    </div>` : '';
+
+  const tilesHtml = S.tiles.map((t,ti)=>{
+    const replaceable = S.replacing && !t.fixed && t.id !== S.replacing.id;
+    return `
+    <div class="tile ${replaceable?'replaceable':''}" ${replaceable?`data-act="replace-tile" data-i="${ti}"`:''}>
+      <div class="tile-name">${esc(t.name)}${replaceable?' · tap to replace':''}</div>
+      <div class="opts ${S.fsMode?'clickable':''}">
+        ${t.options.map((o,oi)=>`
+          <span class="opt ${t.bullet===oi?'marked':''}"
+                ${S.fsMode?`data-act="place" data-t="${ti}" data-o="${oi}"`:''}>${esc(o)}</span>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  const playersHtml = S.players.map(p=>{
+    const isFS = p.id === S.fsId;
+    return `
+    <div class="pcard">
+      <div class="pname">
+        <span>${esc(p.name)}</span>
+        ${isFS
+          ? '<span class="pill blue" style="font-size:.65rem">🔬 FS</span>'
+          : (p.badge
+              ? '<span class="pill" style="font-size:.65rem">🎖️ Badge</span>'
+              : '<span class="pill" style="font-size:.65rem;opacity:.4">No badge</span>')}
+      </div>
+      ${isFS ? `
+        <div class="muted small" style="padding:6px 0">
+          No cards. The Forensic Scientist only reads the Scene tiles.
+        </div>` : `
+        <div class="hand-label">Clue · Key Evidence</div>
+        <div class="chips">${p.hand.clue.map(c=>`<span class="chip clue">${esc(c)}</span>`).join('')}</div>
+        <div class="hand-label">Means of Murder</div>
+        <div class="chips">${p.hand.means.map(c=>`<span class="chip means">${esc(c)}</span>`).join('')}</div>
+      `}
+    </div>`;
+  }).join('');
+
+  let banner = '';
+  if(S.replacing){
+    banner = `<div class="banner">🔬 <b>Round ${S.round}:</b> A new Scene tile has been drawn —
+      <b>${esc(S.replacing.name)}</b>. The Forensic Scientist must tap one of the highlighted tiles to replace,
+      then place a bullet.</div>`;
+  } else if(unplaced > 0){
+    banner = `<div class="banner blue">🔬 The Forensic Scientist must place <b>${unplaced}</b> more bullet${unplaced>1?'s':''}.
+      ${S.round===1?'One bullet per Scene tile.':''}</div>`;
+  } else {
+    banner = `<div class="banner" style="border-color:var(--green);background:rgba(63,191,127,.1);color:var(--green)">
+      ✅ Round ${S.round} evidence is set. Discuss, then accuse — or move to the next round.</div>`;
+  }
+
+  const canNext = roundDone && S.round < 3;
+  const canEnd  = roundDone && S.round === 3;
+
+  app.innerHTML = `
+  <div class="header">
+    <div class="between">
+      <div class="row" style="gap:8px">
+        <span class="pill red">Round ${S.round} / 3</span>
+        <span class="pill">🔪 ${esc(m.name)}?</span>
+      </div>
+      <div class="row" style="gap:8px">
+        <button class="btn sm ${S.fsMode?'gold':'ghost'}" data-act="toggle-fs">
+          ${S.fsMode?'🔒 FS View ON':'🔓 FS View'}
+        </button>
+        <button class="btn sm blue" data-act="open-accuse">🔍 Solve</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap" style="padding-top:0">
+    ${solPanel}
+    ${banner}
+
+    <h3>Scene of the Crime</h3>
+    <div class="tiles">${tilesHtml}</div>
+
+    <h3>Suspects &amp; Evidence</h3>
+    <div class="players">${playersHtml}</div>
+
+    <div class="row" style="margin-top:18px;justify-content:center">
+      ${canNext ? `<button class="btn primary" data-act="next-round">▶ Advance to Round ${S.round+1}</button>` : ''}
+      ${canEnd  ? `<button class="btn primary" data-act="end-unsolved">⏹ End Game — Nobody Solved It</button>` : ''}
+    </div>
+    <div class="muted small center" style="margin-top:10px">
+      Players with a 🎖️ badge may accuse. A wrong accusation burns that badge.
+      The Forensic Scientist holds no cards and cannot be accused.
+    </div>
+  </div>`;
+}
+
+/* ============================================================
+   ACCUSATION MODAL
+   ============================================================ */
+function renderAccuseModal(){
+  const a = S.accuse;
+  const eligible = S.players.filter(p=>p.badge && p.id !== S.fsId);
+  const target = a.targetId !== null ? byId(a.targetId) : null;
+  const ready = a.accuserId !== null && a.targetId !== null && a.clue && a.means;
+
+  app.innerHTML = `
+  <div class="overlay" data-act="acc-backdrop">
+    <div class="modal">
+      <h2 style="color:var(--accent)">🔍 Solve the Crime</h2>
+
+      <h3>1 · Who is accusing?</h3>
+      <div class="chips" style="margin-bottom:16px">
+        ${eligible.map(p=>`<span class="chip ${a.accuserId===p.id?'sel':''}"
+           style="cursor:pointer;background:${a.accuserId===p.id?'#fff':'rgba(255,255,255,.06)'};color:${a.accuserId===p.id?'#111':'#cfd7e4'};border-color:#39445a"
+           data-act="acc-user" data-id="${p.id}">${esc(p.name)}</span>`).join('')}
+      </div>
+
+      <h3>2 · Who is the murderer?</h3>
+      <div class="chips" style="margin-bottom:16px">
+        ${S.players.filter(p=>p.id !== S.fsId).map(p=>`<span class="chip ${a.targetId===p.id?'sel':''}"
+           style="cursor:pointer;background:${a.targetId===p.id?'#fff':'rgba(255,255,255,.06)'};color:${a.targetId===p.id?'#111':'#cfd7e4'};border-color:#39445a"
+           data-act="acc-target" data-id="${p.id}">${esc(p.name)}</span>`).join('')}
+      </div>
+
+      ${target ? `
+        <h3>3 · Which Clue (Key Evidence)?</h3>
+        <div class="chips" style="margin-bottom:14px">
+          ${target.hand.clue.map(c=>`<span class="chip clue ${a.clue===c?'sel':''}" style="cursor:pointer"
+             data-act="acc-clue" data-v="${esc(c)}">${esc(c)}</span>`).join('')}
+        </div>
+        <h3>4 · Which Means of Murder?</h3>
+        <div class="chips" style="margin-bottom:14px">
+          ${target.hand.means.map(c=>`<span class="chip means ${a.means===c?'sel':''}" style="cursor:pointer"
+             data-act="acc-means" data-v="${esc(c)}">${esc(c)}</span>`).join('')}
+        </div>
+      ` : `<div class="muted small" style="margin-bottom:14px">Select a suspect to see their cards.</div>`}
+
+      <div class="row" style="margin-top:18px;justify-content:flex-end">
+        <button class="btn ghost" data-act="close-modal">Cancel</button>
+        <button class="btn primary" data-act="confirm-accuse" ${ready?'':'disabled'}>
+          ${ready?'⚖️ Confirm Accusation':'Complete all 4 steps'}
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ============================================================
+   WITNESS FINAL GUESS
+   ============================================================ */
+function renderWitnessGuess(){
+  const m = byId(S.murdererId);
+  app.innerHTML = `
+  <div class="wrap" style="max-width:600px">
+    <div class="card center">
+      <div class="result-icon">👁️</div>
+      <h1 style="color:var(--purple)">The Crime Is Solved…</h1>
+      <p class="muted">But the Witness saw everything. Before the case closes, the Murderer gets one final guess.</p>
+    </div>
+    <div class="card">
+      <h2 class="center">🔪 ${esc(m.name)}, who is the Witness?</h2>
+      <div class="chips" style="justify-content:center;margin-top:14px">
+        ${S.players.filter(p=>p.id!==S.murdererId && p.id!==S.fsId).map(p=>`
+          <span class="chip" style="cursor:pointer;padding:10px 16px;font-size:.9rem;
+            background:rgba(160,107,232,.14);border-color:rgba(160,107,232,.5);color:#d3b8ff"
+            data-act="witness-guess" data-id="${p.id}">${esc(p.name)}</span>`).join('')}
+      </div>
+      <p class="muted small center" style="margin-top:16px">
+        Guess correctly and the Murderer escapes anyway. Guess wrong and the Investigators win.
+      </p>
+    </div>
+  </div>`;
+}
+
+/* ============================================================
+   RESULT
+   ============================================================ */
+function renderResult(){
+  const r = S.result;
+  const m = byId(S.murdererId);
+  app.innerHTML = `
+  <div class="wrap" style="max-width:640px">
+    <div class="card center">
+      <div class="result-icon">${r.icon}</div>
+      <h1 style="color:${r.color}">${r.title}</h1>
+      <p class="muted">${r.subtitle}</p>
+    </div>
+
+    <div class="card">
+      <h3>The Truth</h3>
+      <div class="row" style="margin-bottom:12px">
+        <span class="pill red">🔪 Murderer: ${esc(m.name)}</span>
+        ${S.accompliceId!==null?`<span class="pill gold">🤝 Accomplice: ${esc(byId(S.accompliceId).name)}</span>`:''}
+        ${S.witnessId!==null?`<span class="pill" style="border-color:var(--purple);color:#c9a6ff">👁️ Witness: ${esc(byId(S.witnessId).name)}</span>`:''}
+        <span class="pill blue">🔬 FS: ${esc(byId(S.fsId).name)}</span>
+      </div>
+      <h3>Solution</h3>
+      <div class="chips">
+        <span class="chip clue sel">${esc(S.solution.clue)}</span>
+        <span class="chip means sel">${esc(S.solution.means)}</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Final Scene Tiles</h3>
+      <div class="tiles" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))">
+        ${S.tiles.map(t=>`
+          <div class="tile">
+            <div class="tile-name">${esc(t.name)}</div>
+            <div class="opts">
+              ${t.options.map((o,oi)=>`<span class="opt ${t.bullet===oi?'marked':''}">${esc(o)}</span>`).join('')}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <button class="btn primary" style="width:100%;padding:15px" data-act="restart">🔁 New Game</button>
+  </div>`;
+}
+
+/* ============================================================
+   EVENT DELEGATION
+   ============================================================ */
+document.addEventListener('click', e=>{
+  const el = e.target.closest('[data-act]');
+  if(!el) return;
+  const act = el.dataset.act;
+
+  /* ---------- SETUP ---------- */
+  if(act==='inc'){ setup.count = Math.min(12, setup.count+1); return render(); }
+  if(act==='dec'){ setup.count = Math.max(4,  setup.count-1); return render(); }
+  if(act==='tog-accomplice'){ setup.accomplice = !setup.accomplice; return render(); }
+  if(act==='tog-witness'){ setup.witness = !setup.witness; return render(); }
+  if(act==='start'){ return createGame(); }
+
+  if(!S) return;
+
+  /* ---------- REVEAL ---------- */
+  if(act==='reveal-role'){ S.revealShown = true; return render(); }
+
+  if(act==='pick-clue'){
+    const p = S.players[S.revealIndex];
+    S.pickClue = p.hand.clue[+el.dataset.i];
+    return render();
+  }
+  if(act==='pick-means'){
+    const p = S.players[S.revealIndex];
+    S.pickMeans = p.hand.means[+el.dataset.i];
+    return render();
+  }
+  if(act==='confirm-solution'){
+    S.solution = { clue:S.pickClue, means:S.pickMeans };
+    S.pickClue = null; S.pickMeans = null;
+    return nextReveal();
+  }
+  if(act==='hide-role'){ return nextReveal(); }
+
+  /* ---------- ACCOMPLICE / WITNESS ---------- */
+  if(act==='show-accomplice'){ S.revealShown = true; return render(); }
+  if(act==='next-from-accomplice'){
+    S.revealShown = false;
+    S.phase = S.witnessId!==null ? 'witness' : 'investigate';
+    return render();
+  }
+  if(act==='show-witness'){ S.revealShown = true; return render(); }
+  if(act==='next-from-witness'){
+    S.revealShown = false; S.phase = 'investigate'; return render();
+  }
+
+  /* ---------- BOARD ---------- */
+  if(act==='toggle-fs'){ S.fsMode = !S.fsMode; return render(); }
+
+  if(act==='place'){
+    const ti = +el.dataset.t, oi = +el.dataset.o;
+    const t = S.tiles[ti];
+    t.bullet = (t.bullet === oi) ? null : oi;
+    return render();
+  }
+
+  if(act==='replace-tile'){
+    const ti = +el.dataset.i;
+    S.usedTileIds.add(S.replacing.id);
+    S.tiles[ti] = { ...S.replacing, bullet:null };
+    S.replacing = null;
+    return render();
+  }
+
+  if(act==='next-round'){
+    S.round++;
+    let pool = TILES.filter(t=>!S.usedTileIds.has(t.id));
+    if(pool.length === 0){
+      S.usedTileIds = new Set(S.tiles.map(t=>t.id));
+      pool = TILES.filter(t=>!S.usedTileIds.has(t.id));
+    }
+    S.replacing = { ...shuffle(pool)[0], bullet:null };
+    return render();
+  }
+
+  if(act==='end-unsolved'){
+    return finish('murderer', 'Nobody solved the crime in three rounds.');
+  }
+
+  /* ---------- ACCUSATION ---------- */
+  if(act==='open-accuse'){
+    if(!S.players.some(p=>p.badge && p.id !== S.fsId)) return;
+    S.accuse = { accuserId:null, targetId:null, clue:null, means:null };
+    return renderAccuseModal();
+  }
+  if(act==='acc-backdrop'){
+    if(e.target === el){ S.accuse = null; return render(); }
+    return;
+  }
+  if(act==='close-modal'){ S.accuse = null; return render(); }
+
+  if(act==='acc-user'){ S.accuse.accuserId = +el.dataset.id; return renderAccuseModal(); }
+  if(act==='acc-target'){
+    S.accuse.targetId = +el.dataset.id;
+    S.accuse.clue = null; S.accuse.means = null;
+    return renderAccuseModal();
+  }
+  if(act==='acc-clue'){ S.accuse.clue = el.dataset.v; return renderAccuseModal(); }
+  if(act==='acc-means'){ S.accuse.means = el.dataset.v; return renderAccuseModal(); }
+
+  if(act==='confirm-accuse'){
+    const a = S.accuse;
+    const target = byId(a.targetId);
+    const accuser = byId(a.accuserId);
+
+    const correct = (target.id === S.murdererId)
+                 && (a.clue === S.solution.clue)
+                 && (a.means === S.solution.means);
+
+    S.accuse = null;
+
+    if(correct){
+      if(S.witnessId !== null){ S.phase = 'witnessGuess'; return render(); }
+      return finish('investigators', `${accuser.name} named the murderer, the evidence and the weapon.`);
+    }
+
+    accuser.badge = false;
+    S.lastWrong = `${accuser.name} accused ${target.name} — wrong.`;
+
+    if(!S.players.some(p=>p.badge && p.id !== S.fsId)){
+      return finish('murderer', 'Every badge was burned on a false accusation.');
+    }
+    return render();
+  }
+
+  /* ---------- WITNESS GUESS ---------- */
+  if(act==='witness-guess'){
+    const guess = +el.dataset.id;
+    if(guess === S.witnessId){
+      return finish('murderer', 'The Murderer correctly identified the Witness — the case collapses.');
+    }
+    return finish('investigators', 'The Murderer guessed wrong. The Witness is safe.');
+  }
+
+  /* ---------- RESULT ---------- */
+  if(act==='restart'){
+    S = null;
+    setup = { count:6, names:[], accomplice:false, witness:false };
+    return render();
+  }
+});
+
+/* input handling for names */
+document.addEventListener('input', e=>{
+  const el = e.target.closest('[data-act="name"]');
+  if(!el) return;
+  setup.names[+el.dataset.i] = el.value;
+});
+
+/* ============================================================
+   FLOW HELPERS
+   ============================================================ */
+function nextReveal(){
+  S.revealShown = false;
+  S.revealIndex++;
+  if(S.revealIndex >= S.players.length){
+    S.phase = S.accompliceId !== null ? 'accomplice'
+            : (S.witnessId !== null ? 'witness' : 'investigate');
+    S.revealShown = false;
+  }
+  render();
+}
+
+function finish(winner, reason){
+  const m = byId(S.murdererId);
+  if(winner === 'investigators'){
+    S.result = {
+      icon:'🏆', color:'var(--green)',
+      title:'Investigators Win!',
+      subtitle: reason + ' The case is closed.'
+    };
+  } else {
+    S.result = {
+      icon:'🔪', color:'var(--accent)',
+      title:'The Murderer Escapes!',
+      subtitle: reason + ` ${m.name} walks free.`
+    };
+  }
+  S.phase = 'result';
+  render();
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+render();
+</script>
+</body>
+</html>
